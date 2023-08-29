@@ -7,8 +7,7 @@ const snapThreshold = 100;
 // Functions for dragging
 function startDrag(event) {
   if (event.touches) {
-    // if it's a touch event
-    event = event.touches[0]; // take the first touch point
+    event = event.touches[0];
   }
 
   isDragging = true;
@@ -21,9 +20,8 @@ function duringDrag(event) {
 
   let clientX;
   if (event.touches) {
-    // if it's a touch event
-    event.preventDefault(); // prevent default to stop the usual scroll
-    clientX = event.touches[0].clientX; // take the first touch point
+    event.preventDefault();
+    clientX = event.touches[0].clientX;
   } else {
     clientX = event.clientX;
   }
@@ -38,12 +36,21 @@ function endDrag(event) {
     let dx =
       startDragX -
       (event.changedTouches ? event.changedTouches[0].clientX : event.clientX);
+    const screenWidth = window.innerWidth;
 
     if (Math.abs(dx) > snapThreshold) {
       if (dx > 0) {
-        smoothScrollTo(wrapper, window.innerWidth);
+        if (wrapper.scrollLeft < 1.5 * screenWidth) {
+          smoothScrollTo(wrapper, screenWidth);
+        } else {
+          smoothScrollTo(wrapper, 2 * screenWidth);
+        }
       } else {
-        smoothScrollTo(wrapper, 0);
+        if (wrapper.scrollLeft > screenWidth / 2) {
+          smoothScrollTo(wrapper, screenWidth);
+        } else {
+          smoothScrollTo(wrapper, 0);
+        }
       }
     } else {
       smoothScrollTo(wrapper, initialScroll);
@@ -55,13 +62,21 @@ function endDrag(event) {
 }
 
 function updateButtonHighlight() {
-  if (wrapper.scrollLeft >= window.innerWidth / 2) {
-    document.getElementById("indexBtn").classList.remove("active");
-    document.getElementById("pageBtn").classList.add("active");
+  const screenWidth = window.innerWidth;
+  if (wrapper.scrollLeft < screenWidth / 2) {
+    setHighlight("indexBtn");
+  } else if (wrapper.scrollLeft < 1.5 * screenWidth) {
+    setHighlight("page1Btn");
   } else {
-    document.getElementById("pageBtn").classList.remove("active");
-    document.getElementById("indexBtn").classList.add("active");
+    setHighlight("page2Btn");
   }
+}
+
+function setHighlight(activeId) {
+  ["indexBtn", "page1Btn", "page2Btn"].forEach((id) => {
+    document.getElementById(id).classList.remove("active");
+  });
+  document.getElementById(activeId).classList.add("active");
 }
 
 // Smooth scroll function
@@ -69,7 +84,7 @@ function smoothScrollTo(element, target) {
   let start = element.scrollLeft;
   let change = target - start;
   let startTime = performance.now();
-  let duration = 300; // Duration in ms
+  let duration = 300;
 
   function animateScroll(currentTime) {
     let timeElapsed = currentTime - startTime;
@@ -113,6 +128,10 @@ document.getElementById("indexBtn").addEventListener("click", function () {
   smoothScrollTo(wrapper, 0);
 });
 
-document.getElementById("pageBtn").addEventListener("click", function () {
+document.getElementById("page1Btn").addEventListener("click", function () {
   smoothScrollTo(wrapper, window.innerWidth);
+});
+
+document.getElementById("page2Btn").addEventListener("click", function () {
+  smoothScrollTo(wrapper, 2 * window.innerWidth);
 });

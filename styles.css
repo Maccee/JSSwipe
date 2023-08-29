@@ -15,7 +15,10 @@
   margin-top: 6rem;
 }
 /* ... Existing styles ... */
-
+.content {
+  width: 100vw;
+  /* ... any other styles you've defined for individual sections ... */
+}
 header {
   position: fixed;
   top: 0;
