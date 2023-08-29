@@ -4,7 +4,6 @@ let initialScroll;
 const wrapper = document.getElementById("wrapper");
 const snapThreshold = 100;
 
-// Functions for dragging
 function startDrag(event) {
   if (event.touches) {
     event = event.touches[0];
@@ -18,45 +17,29 @@ function startDrag(event) {
 function duringDrag(event) {
   if (!isDragging) return;
 
-  let clientX;
-  if (event.touches) {
-    event.preventDefault();
-    clientX = event.touches[0].clientX;
-  } else {
-    clientX = event.clientX;
-  }
-
+  let clientX = event.touches ? event.touches[0].clientX : event.clientX;
   let dx = clientX - startDragX;
-  let newScroll = initialScroll - dx;
-  wrapper.scrollLeft = newScroll;
+  wrapper.scrollLeft = initialScroll - dx;
 }
 
-function endDrag(event) {
+function endDrag() {
+  const screenWidth = window.innerWidth;
   if (isDragging) {
-    let dx =
-      startDragX -
-      (event.changedTouches ? event.changedTouches[0].clientX : event.clientX);
-    const screenWidth = window.innerWidth;
+    const currentScroll = wrapper.scrollLeft;
+    const relativeScroll = currentScroll % screenWidth;
 
-    if (Math.abs(dx) > snapThreshold) {
-      if (dx > 0) {
-        if (wrapper.scrollLeft < 1.5 * screenWidth) {
-          smoothScrollTo(wrapper, screenWidth);
-        } else {
-          smoothScrollTo(wrapper, 2 * screenWidth);
-        }
-      } else {
-        if (wrapper.scrollLeft > screenWidth / 2) {
-          smoothScrollTo(wrapper, screenWidth);
-        } else {
-          smoothScrollTo(wrapper, 0);
-        }
-      }
+    if (relativeScroll < snapThreshold) {
+      smoothScrollTo(wrapper, currentScroll - relativeScroll);
+    } else if (relativeScroll > screenWidth - snapThreshold) {
+      smoothScrollTo(wrapper, currentScroll + (screenWidth - relativeScroll));
+    } else if (
+      relativeScroll >= snapThreshold &&
+      relativeScroll <= screenWidth / 2
+    ) {
+      smoothScrollTo(wrapper, currentScroll - relativeScroll);
     } else {
-      smoothScrollTo(wrapper, initialScroll);
+      smoothScrollTo(wrapper, currentScroll + (screenWidth - relativeScroll));
     }
-
-    updateButtonHighlight();
   }
   isDragging = false;
 }
