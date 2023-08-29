@@ -2,45 +2,67 @@ let isDragging = false;
 let startDragX;
 let initialScroll;
 const wrapper = document.getElementById("wrapper");
-const snapThreshold = 100; // snap after dragging 100px
+const snapThreshold = 100;
 
-wrapper.addEventListener("mousedown", function (e) {
-  isDragging = true;
-  startDragX = e.clientX;
-  initialScroll = this.scrollLeft;
-});
-
-document.addEventListener("mousemove", function (e) {
-  if (isDragging) {
-    let dx = e.clientX - startDragX;
-    let newScroll = initialScroll - dx;
-    wrapper.scrollLeft = newScroll;
+// Functions for dragging
+function startDrag(event) {
+  if (event.touches) {
+    // if it's a touch event
+    event = event.touches[0]; // take the first touch point
   }
-});
 
-document.addEventListener("mouseup", function () {
+  isDragging = true;
+  startDragX = event.clientX;
+  initialScroll = wrapper.scrollLeft;
+}
+
+function duringDrag(event) {
+  if (!isDragging) return;
+
+  let clientX;
+  if (event.touches) {
+    // if it's a touch event
+    event.preventDefault(); // prevent default to stop the usual scroll
+    clientX = event.touches[0].clientX; // take the first touch point
+  } else {
+    clientX = event.clientX;
+  }
+
+  let dx = clientX - startDragX;
+  let newScroll = initialScroll - dx;
+  wrapper.scrollLeft = newScroll;
+}
+
+function endDrag(event) {
   if (isDragging) {
-    let dx = startDragX - event.clientX;
+    let dx =
+      startDragX -
+      (event.changedTouches ? event.changedTouches[0].clientX : event.clientX);
 
-    // If dragged more than half the window width
     if (Math.abs(dx) > snapThreshold) {
-      // Determine direction and snap accordingly
       if (dx > 0) {
-        // Snap to the end (page.html)
         smoothScrollTo(wrapper, window.innerWidth);
       } else {
-        // Snap to the start (index.html)
         smoothScrollTo(wrapper, 0);
       }
     } else {
-      // Snap back to the original position
       smoothScrollTo(wrapper, initialScroll);
     }
 
-    isDragging = false;
     updateButtonHighlight();
   }
-});
+  isDragging = false;
+}
+
+function updateButtonHighlight() {
+  if (wrapper.scrollLeft >= window.innerWidth / 2) {
+    document.getElementById("indexBtn").classList.remove("active");
+    document.getElementById("pageBtn").classList.add("active");
+  } else {
+    document.getElementById("pageBtn").classList.remove("active");
+    document.getElementById("indexBtn").classList.add("active");
+  }
+}
 
 // Smooth scroll function
 function smoothScrollTo(element, target) {
@@ -60,7 +82,6 @@ function smoothScrollTo(element, target) {
     if (progress < 1) {
       requestAnimationFrame(animateScroll);
     } else {
-      // After scrolling animation completes, update button highlight
       updateButtonHighlight();
     }
   }
@@ -72,48 +93,26 @@ function smoothScrollTo(element, target) {
   requestAnimationFrame(animateScroll);
 }
 
+// Add event listeners
+wrapper.addEventListener("mousedown", startDrag);
+wrapper.addEventListener("touchstart", startDrag);
+
+document.addEventListener("mousemove", duringDrag);
+document.addEventListener("touchmove", duringDrag, { passive: false });
+
+document.addEventListener("mouseup", endDrag);
+document.addEventListener("touchend", endDrag);
+
 // Optional: Prevent highlighting while dragging
 wrapper.addEventListener("selectstart", function (e) {
   e.preventDefault();
 });
 
-// ... Existing Code ...
-
-document.addEventListener("mouseup", function () {
-  if (isDragging) {
-    let dx = startDragX - event.clientX;
-
-    // ... Existing logic ...
-
-    // After the snapping logic, highlight the appropriate button
-    if (wrapper.scrollLeft >= window.innerWidth / 2) {
-      document.getElementById("indexBtn").classList.remove("active");
-      document.getElementById("pageBtn").classList.add("active");
-    } else {
-      document.getElementById("pageBtn").classList.remove("active");
-      document.getElementById("indexBtn").classList.add("active");
-    }
-  }
-});
-
 // Event listeners for navbar buttons
 document.getElementById("indexBtn").addEventListener("click", function () {
   smoothScrollTo(wrapper, 0);
-  document.getElementById("indexBtn").classList.add("active");
-  document.getElementById("pageBtn").classList.remove("active");
 });
 
 document.getElementById("pageBtn").addEventListener("click", function () {
   smoothScrollTo(wrapper, window.innerWidth);
-  document.getElementById("pageBtn").classList.add("active");
-  document.getElementById("indexBtn").classList.remove("active");
 });
-function updateButtonHighlight() {
-  if (wrapper.scrollLeft >= window.innerWidth / 2) {
-    document.getElementById("indexBtn").classList.remove("active");
-    document.getElementById("pageBtn").classList.add("active");
-  } else {
-    document.getElementById("pageBtn").classList.remove("active");
-    document.getElementById("indexBtn").classList.add("active");
-  }
-}
