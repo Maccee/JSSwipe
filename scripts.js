@@ -28,18 +28,21 @@ function endDrag() {
   const screenWidth = window.innerWidth;
   const currentScroll = wrapper.scrollLeft;
   const relativeScroll = currentScroll % screenWidth;
+  const dragDistance = currentScroll - initialScroll;
 
+  // Snap to previous page
+  if (dragDistance > -snapThreshold && dragDistance < snapThreshold) {
+    const pagesScrolled = Math.round(currentScroll / screenWidth);
+    smoothScrollTo(wrapper, pagesScrolled * screenWidth);
+  }
   // Snap left
-  if (relativeScroll < snapThreshold) {
-    smoothScrollTo(wrapper, currentScroll - relativeScroll);
+  else if (dragDistance <= -snapThreshold) {
+    const pagesScrolled = Math.floor(currentScroll / screenWidth);
+    smoothScrollTo(wrapper, pagesScrolled * screenWidth);
   }
   // Snap right
-  else if (relativeScroll > screenWidth - snapThreshold) {
-    smoothScrollTo(wrapper, currentScroll + (screenWidth - relativeScroll));
-  }
-  // Stay on current
-  else {
-    const pagesScrolled = Math.round(currentScroll / screenWidth);
+  else if (dragDistance >= snapThreshold) {
+    const pagesScrolled = Math.ceil(currentScroll / screenWidth);
     smoothScrollTo(wrapper, pagesScrolled * screenWidth);
   }
 
