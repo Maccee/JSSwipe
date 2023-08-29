@@ -19,28 +19,30 @@ function duringDrag(event) {
 
   let clientX = event.touches ? event.touches[0].clientX : event.clientX;
   let dx = clientX - startDragX;
+  event.preventDefault();
+
   wrapper.scrollLeft = initialScroll - dx;
 }
 
 function endDrag() {
   const screenWidth = window.innerWidth;
-  if (isDragging) {
-    const currentScroll = wrapper.scrollLeft;
-    const relativeScroll = currentScroll % screenWidth;
+  const currentScroll = wrapper.scrollLeft;
+  const relativeScroll = currentScroll % screenWidth;
 
-    if (relativeScroll < snapThreshold) {
-      smoothScrollTo(wrapper, currentScroll - relativeScroll);
-    } else if (relativeScroll > screenWidth - snapThreshold) {
-      smoothScrollTo(wrapper, currentScroll + (screenWidth - relativeScroll));
-    } else if (
-      relativeScroll >= snapThreshold &&
-      relativeScroll <= screenWidth / 2
-    ) {
-      smoothScrollTo(wrapper, currentScroll - relativeScroll);
-    } else {
-      smoothScrollTo(wrapper, currentScroll + (screenWidth - relativeScroll));
-    }
+  // Snap left
+  if (relativeScroll < snapThreshold) {
+    smoothScrollTo(wrapper, currentScroll - relativeScroll);
   }
+  // Snap right
+  else if (relativeScroll > screenWidth - snapThreshold) {
+    smoothScrollTo(wrapper, currentScroll + (screenWidth - relativeScroll));
+  }
+  // Stay on current
+  else {
+    const pagesScrolled = Math.round(currentScroll / screenWidth);
+    smoothScrollTo(wrapper, pagesScrolled * screenWidth);
+  }
+
   isDragging = false;
 }
 
